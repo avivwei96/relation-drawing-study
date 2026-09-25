@@ -56,7 +56,7 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
   <section class="panel" id="intro">
     <p>Each screen shows a short description and two generated images, <b>A</b> and <b>B</b>, made from the same starting noise by two different models. Which model made which image is hidden and changes from pair to pair.</p>
     <ul>
-      <li><b>Contains the subject / the object</b>: that thing (named in the question) is clearly visible in the image.</li>
+      <li><b>Contains the ...</b>: the thing named in the question is clearly visible in the image.</li>
       <li><b>Relation holds</b>: the first object is placed as described relative to the second (left of, right of, above, below). Judge only the placement.</li>
       <li><b>Looks better</b>: overall image quality and realism, ignoring the description.</li>
     </ul>
@@ -120,7 +120,7 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
     const clean = name.replace(/[^A-Za-z0-9 .\-_]/g, '').slice(0, 40);
     return `RDS1|${clean}|${seed.toString(36)}|${blocks.join('.')}|${a.join(',')}`; }
   function show(i){ pos = Math.max(0, Math.min(i, order.length - 1)); const p = M.byId[order[pos]];
-    $('promptText').textContent = p.prompt; $('subjName').textContent = `the ${p.subject} (subject)`; $('objName').textContent = `the ${p.object} (object)`;
+    $('promptText').textContent = p.prompt; $('subjName').textContent = `the ${p.subject}`; $('objName').textContent = `the ${p.object}`;
     cellStyle($('imgA'), p.cells[0]); cellStyle($('imgB'), p.cells[1]);
     const a = answers[p.id] || {}; cur = {subject: a.subject, object: a.object, relation: a.relation, quality: a.quality};
     ['subject', 'object', 'relation', 'quality'].forEach(q => setPressed(q, cur[q]));
