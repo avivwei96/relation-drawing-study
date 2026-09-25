@@ -60,7 +60,7 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
       <li><b>Relation holds</b>: the first object is placed as described relative to the second (left of, right of, above, below). Judge only the placement.</li>
       <li><b>Looks better</b>: overall image quality and realism, ignoring the description.</li>
     </ul>
-    <p>You will see about 17 pairs, which takes around 8 minutes. No sign-in is needed. At the end you get a short answer code: copy it and send it to the person who shared this link with you. Progress is kept in this browser, so you can pause and come back on the same device.</p>
+    <p>You will see about 17 pairs, which takes around 8 minutes. No sign-in is needed. Your answers are sent automatically when you finish. Progress is kept in this browser, so you can pause and come back on the same device.</p>
     <label class="f" for="rname">Your name or initials
       <input type="text" id="rname" autocomplete="name" placeholder="e.g. A.W." maxlength="60">
     </label>
@@ -90,7 +90,9 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
   </section>
 
   <section class="panel" id="done" hidden>
-    <p><b>This set is done. Thank you.</b> Copy the answer code below and send it to the person who shared this link with you. Your answers are not collected until you send it.</p>
+    <p><b>This set is done. Thank you.</b></p>
+    <p class="status" id="sendStatus" aria-live="polite"></p>
+    <p>Backup: if the line above says sending failed, copy this code and send it to the person who shared the link.</p>
     <textarea id="code" readonly rows="4" aria-label="Your answer code"></textarea>
     <div class="nav"><button class="btn" id="copyBtn">Copy answer code</button><span class="status" id="copyStatus" aria-live="polite"></span></div>
     <p>If you have another 10 minutes, you can rate a second set of different pairs; the code then covers both sets.</p>
@@ -102,12 +104,13 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
 (() => {
   const $ = id => document.getElementById(id);
   const KEY = 'rds-public-v3';
-  let M = null, order = [], blocks = [], seed = 0, pos = 0, answers = {}, name = '', shownAt = 0, cur = {};
+  let M = null, order = [], blocks = [], seed = 0, pos = 0, answers = {}, name = '', shownAt = 0, cur = {}, sent = 0;
+  const INBOX = 'https://ntfy.sh/rds-4O7PCSJqDpwkEZh0y7xNqK6d';
   function hash(s){ let h = 2166136261 >>> 0; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return h; }
   function shuffled(ids, sd){ const a = ids.slice(); let x = sd || 1;
     for (let i = a.length - 1; i > 0; i--) { x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0; const j = x % (i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
   function load(){ try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
-  function persist(){ try { localStorage.setItem(KEY, JSON.stringify({name, blocks, seed, answers})); } catch (e) {} }
+  function persist(){ try { localStorage.setItem(KEY, JSON.stringify({name, blocks, seed, answers, sent})); } catch (e) {} }
   function cellStyle(el, cell){ const s = Math.floor(cell / M.per_sheet), k = cell % M.per_sheet, c = k % M.grid, r = Math.floor(k / M.grid);
     el.style.backgroundImage = `url(${M.sheets[s]})`; el.style.backgroundPosition = `${c / (M.grid - 1) * 100}% ${r / (M.grid - 1) * 100}%`; }
   function buildOrder(){ order = []; for (const b of blocks) order = order.concat(shuffled(M.blocks[b], hash(seed + ':' + b))); }
@@ -126,7 +129,17 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
     ['subject', 'object', 'relation', 'quality'].forEach(q => setPressed(q, cur[q]));
     $('nextBtn').disabled = !ready(); $('backBtn').disabled = pos === 0; $('rate').hidden = false; $('done').hidden = true; shownAt = performance.now();
     $('nextBtn').textContent = pos === order.length - 1 ? 'Finish' : 'Next'; $('saveStatus').textContent = ''; }
-  function finished(){ $('rate').hidden = true; $('done').hidden = false; $('code').value = code(); $('moreBtn').hidden = blocks.length >= M.blocks.length; $('copyStatus').textContent = ''; }
+  function nAnswered(){ return order.filter(id => answers[id]).length; }
+  function sendNow(final){ const n = nAnswered(); if (!n || n <= sent) return Promise.resolve(n <= sent);
+    const body = code();
+    return fetch(INBOX, {method: 'POST', body, headers: {'Title': final ? 'final' : 'partial'}}).then(r => { if (r.ok) { sent = n; persist(); } return r.ok; }, () => false); }
+  function sendOnLeave(){ const n = nAnswered(); if (!n || n <= sent) return;
+    try { if (navigator.sendBeacon(INBOX, code())) { sent = n; persist(); } } catch (e) {} }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') sendOnLeave(); });
+  window.addEventListener('pagehide', sendOnLeave);
+  function finished(){ $('rate').hidden = true; $('done').hidden = false; $('code').value = code();
+    $('sendStatus').textContent = 'Sending your answers…'; $('sendStatus').className = 'status';
+    sendNow(true).then(ok => { $('sendStatus').textContent = ok ? 'Your answers were sent automatically. Nothing else to do.' : 'Automatic sending failed. Please copy the code below and send it to the person who shared this link.'; $('sendStatus').className = ok ? 'status' : 'status err'; }); $('moreBtn').hidden = blocks.length >= M.blocks.length; $('copyStatus').textContent = ''; }
   function next(){ if (!ready()) return; const p = M.byId[order[pos]];
     answers[p.id] = {...cur, ms: Math.round(performance.now() - shownAt)}; persist(); progress();
     const nxt = order.findIndex((id, k) => k > pos && !answers[id]); const miss = order.findIndex(id => !answers[id]);
@@ -146,7 +159,7 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
     try { M = await (await fetch('pairs.json')).json(); } catch (e) { $('introStatus').textContent = 'The image list failed to load. Reload the page.'; $('introStatus').className = 'status err'; return; }
     M.byId = Object.fromEntries(M.pairs.map(p => [p.id, p])); M.sheets.forEach(s => { const i = new Image(); i.src = s; });
     const st = load();
-    if (st && Array.isArray(st.blocks)) { ({name, blocks, seed, answers} = st); blocks = blocks.filter(b => Number.isInteger(b) && b >= 0 && b < M.blocks.length); $('rname').value = name || ''; }
+    if (st && Array.isArray(st.blocks)) { ({name, blocks, seed, answers} = st); sent = st.sent || 0; blocks = blocks.filter(b => Number.isInteger(b) && b >= 0 && b < M.blocks.length); $('rname').value = name || ''; }
     if (!blocks.length) { seed = seed || ((Math.random() * 2 ** 31) >>> 0); blocks = [seed % M.blocks.length]; answers = answers || {}; }
     buildOrder(); progress();
     const n = order.filter(id => answers[id]).length;
