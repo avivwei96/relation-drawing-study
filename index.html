@@ -101,7 +101,7 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const KEY = 'rds-public-v1';
+  const KEY = 'rds-public-v2';
   let M = null, order = [], blocks = [], seed = 0, pos = 0, answers = {}, name = '', shownAt = 0, cur = {};
   function hash(s){ let h = 2166136261 >>> 0; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return h; }
   function shuffled(ids, sd){ const a = ids.slice(); let x = sd || 1;
@@ -146,8 +146,8 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
     try { M = await (await fetch('pairs.json')).json(); } catch (e) { $('introStatus').textContent = 'The image list failed to load. Reload the page.'; $('introStatus').className = 'status err'; return; }
     M.byId = Object.fromEntries(M.pairs.map(p => [p.id, p])); M.sheets.forEach(s => { const i = new Image(); i.src = s; });
     const st = load();
-    if (st && Array.isArray(st.blocks) && st.blocks.length) { ({name, blocks, seed, answers} = st); $('rname').value = name; }
-    else { seed = (Math.random() * 2 ** 31) >>> 0; blocks = [seed % M.blocks.length]; answers = {}; }
+    if (st && Array.isArray(st.blocks)) { ({name, blocks, seed, answers} = st); blocks = blocks.filter(b => Number.isInteger(b) && b >= 0 && b < M.blocks.length); $('rname').value = name || ''; }
+    if (!blocks.length) { seed = seed || ((Math.random() * 2 ** 31) >>> 0); blocks = [seed % M.blocks.length]; answers = answers || {}; }
     buildOrder(); progress();
     const n = order.filter(id => answers[id]).length;
     $('introStatus').textContent = n ? `Welcome back: ${n} of ${order.length} pairs already rated on this device.` : 'Enter your name to begin.';
