@@ -49,7 +49,7 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
 <div class="wrap">
   <header>
     <h1>Relation drawing study</h1>
-    <span class="meta" id="count">about 17 image pairs</span>
+    <span class="meta" id="count">about 27 image pairs</span>
   </header>
   <div class="bar" aria-hidden="true"><i id="prog"></i></div>
 
@@ -59,10 +59,10 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
 
       <li><b>Relation holds</b>: the first object is placed as described relative to the second (left of, right of, above, below). Judge only the placement.</li>
       <li><b>Looks better</b>: overall image quality: sharper, more realistic, fewer distortions. Ignore the description.</li>
-      <li><b>Contains the ...</b>: the thing named in the question is recognisable in the image. The model is still in training, so objects can look rough: a duck may be just a yellow blob. Judge roughly.</li>
+      <li>The model is still in training, so objects can look rough: a duck may be just a yellow blob. Judge roughly.</li>
       <li>You may skip a question you cannot judge and still press Next.</li>
     </ul>
-    <p>You will see about 17 pairs, which takes around 8 minutes. No sign-in is needed. Your answers are sent automatically when you finish. Progress is kept in this browser, so you can pause and come back on the same device.</p>
+    <p>You will see about 27 pairs, which takes around 7 minutes. No sign-in is needed. Your answers are sent automatically when you finish. Progress is kept in this browser, so you can pause and come back on the same device.</p>
     <label class="f" for="rname">Your name or initials
       <input type="text" id="rname" autocomplete="name" placeholder="e.g. A.W." maxlength="60">
     </label>
@@ -79,10 +79,6 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
       <div class="seg"><button data-v="A">A</button><button data-v="B">B</button><button data-v="both">Both</button><button data-v="neither">Neither</button></div></div>
     <div class="q" data-q="quality"><h3>2. Which image looks better? <span>(sharper, more realistic, fewer distortions; ignore the description)</span></h3>
       <div class="seg"><button data-v="A">A</button><button data-v="B">B</button><button data-v="cant_tell">Can't tell</button></div></div>
-    <div class="q" data-q="subject"><h3>3. Which image contains <span id="subjName">the subject</span>?</h3>
-      <div class="seg"><button data-v="A">A</button><button data-v="B">B</button><button data-v="both">Both</button><button data-v="neither">Neither</button></div></div>
-    <div class="q" data-q="object"><h3>4. Which image contains <span id="objName">the object</span>?</h3>
-      <div class="seg"><button data-v="A">A</button><button data-v="B">B</button><button data-v="both">Both</button><button data-v="neither">Neither</button></div></div>
     <div class="nav">
       <button class="btn ghost" id="backBtn">Back</button>
       <span class="status" id="saveStatus" aria-live="polite"></span>
@@ -105,7 +101,7 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const KEY = 'rds-public-v3';
+  const KEY = 'rds-public-v4';
   let M = null, order = [], blocks = [], seed = 0, pos = 0, answers = {}, name = '', shownAt = 0, cur = {}, sent = 0;
   const INBOX = 'https://ntfy.sh/rds-4O7PCSJqDpwkEZh0y7xNqK6d';
   function hash(s){ let h = 2166136261 >>> 0; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return h; }
@@ -125,10 +121,10 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
     const clean = name.replace(/[^A-Za-z0-9 .\-_]/g, '').slice(0, 40);
     return `RDS2|${clean}|${seed.toString(36)}|${blocks.join('.')}|${a.join(',')}`; }
   function show(i){ pos = Math.max(0, Math.min(i, order.length - 1)); const p = M.byId[order[pos]];
-    $('promptText').textContent = p.prompt; $('subjName').textContent = `the ${p.subject}`; $('objName').textContent = `the ${p.object}`;
+    $('promptText').textContent = p.prompt; 
     cellStyle($('imgA'), p.cells[0]); cellStyle($('imgB'), p.cells[1]);
-    const a = answers[p.id] || {}; cur = {subject: a.subject, object: a.object, relation: a.relation, quality: a.quality};
-    ['subject', 'object', 'relation', 'quality'].forEach(q => setPressed(q, cur[q]));
+    const a = answers[p.id] || {}; cur = {relation: a.relation, quality: a.quality};
+    ['relation', 'quality'].forEach(q => setPressed(q, cur[q]));
     $('nextBtn').disabled = !ready(); $('backBtn').disabled = pos === 0; $('rate').hidden = false; $('done').hidden = true; shownAt = performance.now();
     $('nextBtn').textContent = pos === order.length - 1 ? 'Finish' : 'Next'; $('saveStatus').textContent = ''; }
   function nAnswered(){ return order.filter(id => answers[id]).length; }
