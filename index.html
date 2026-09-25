@@ -1,0 +1,161 @@
+<title>Relation Drawing Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+[hidden]{display:none!important}
+body{margin:0}
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#15181c; --ink2:#5b616b; --line:#d6dad3;
+  --accent:#0d6b66; --accent-ink:#ffffff; --accent-soft:#dcecea; --warn:#9a4a12;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#111315; --surface:#1a1d20; --ink:#e7e9e5; --ink2:#a2a8b0; --line:#30353a;
+  --accent:#4cb1a9; --accent-ink:#0b1413; --accent-soft:#1d3634; --warn:#e3a06d; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#111315; --surface:#1a1d20; --ink:#e7e9e5; --ink2:#a2a8b0; --line:#30353a;
+  --accent:#4cb1a9; --accent-ink:#0b1413; --accent-soft:#1d3634; --warn:#e3a06d; color-scheme:dark; }
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+.wrap{max-width:920px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 16px}
+h1{font-size:19px;font-weight:600;margin:0;text-wrap:balance}
+.meta{font-family:var(--mono);font-size:12.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden}.bar>i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.panel p{margin:0;max-width:66ch}.panel ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;max-width:66ch}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:500;max-width:340px}
+textarea{font:13px/1.4 var(--mono);width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);resize:vertical;word-break:break-all}
+input[type=text]{font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink)}
+input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.prompt{font-size:22px;font-weight:500;text-wrap:balance}.prompt small{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);font-weight:500;margin-bottom:2px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{display:flex;flex-direction:column;gap:6px}
+.card b{font-family:var(--mono);font-size:14px;font-weight:500;color:var(--ink2)}
+.img{width:100%;aspect-ratio:1;border-radius:6px;background-color:#000;background-repeat:no-repeat;background-size:1000% 1000%;border:1px solid var(--line)}
+.q{display:flex;flex-direction:column;gap:8px}.q h3{margin:0;font-size:14.5px;font-weight:600}.q h3 span{font-weight:400;color:var(--ink2)}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg button{font:inherit;font-weight:500;min-width:84px;padding:8px 14px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg button:hover{border-color:var(--accent)}
+.nav{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.btn{font:inherit;font-weight:600;padding:10px 20px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.status{font-size:13px;color:var(--ink2)}.status.err{color:var(--warn)}
+.kbd{font-family:var(--mono);font-size:12px;color:var(--ink2)}
+@media (max-width:520px){.pair{gap:8px}.seg button{min-width:0;flex:1}.prompt{font-size:19px}}
+@media (prefers-reduced-motion:reduce){.bar>i{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Relation drawing study</h1>
+    <span class="meta" id="count">about 24 image pairs</span>
+  </header>
+  <div class="bar" aria-hidden="true"><i id="prog"></i></div>
+
+  <section class="panel" id="intro">
+    <p>Each screen shows a short description and two generated images, <b>A</b> and <b>B</b>, made from the same starting noise by two different models. Which model made which image is hidden and changes from pair to pair.</p>
+    <ul>
+      <li><b>Contains the subject / the object</b>: that thing (named in the question) is clearly visible in the image.</li>
+      <li><b>Relation holds</b>: the first object is placed as described relative to the second (left of, right of, above, below). Judge only the placement.</li>
+      <li><b>Looks better</b>: overall image quality and realism, ignoring the description.</li>
+    </ul>
+    <p>You will see about 24 pairs, which takes around 10 minutes. No sign-in is needed. At the end you get a short answer code: copy it and send it to the person who shared this link with you. Progress is kept in this browser, so you can pause and come back on the same device.</p>
+    <label class="f" for="rname">Your name or initials
+      <input type="text" id="rname" autocomplete="name" placeholder="e.g. A.W." maxlength="60">
+    </label>
+    <div class="nav"><span class="status" id="introStatus">Connecting…</span><button class="btn" id="startBtn" disabled>Start</button></div>
+  </section>
+
+  <section class="panel" id="rate" hidden>
+    <div class="prompt"><small>Description</small><span id="promptText">a stool below a piano</span></div>
+    <div class="pair">
+      <div class="card"><b>A</b><div class="img" id="imgA" role="img" aria-label="Image A"></div></div>
+      <div class="card"><b>B</b><div class="img" id="imgB" role="img" aria-label="Image B"></div></div>
+    </div>
+    <div class="q" data-q="subject"><h3>1. Which image contains <span id="subjName">the subject</span>?</h3>
+      <div class="seg"><button data-v="A">A</button><button data-v="B">B</button><button data-v="both">Both</button><button data-v="neither">Neither</button></div></div>
+    <div class="q" data-q="object"><h3>2. Which image contains <span id="objName">the object</span>?</h3>
+      <div class="seg"><button data-v="A">A</button><button data-v="B">B</button><button data-v="both">Both</button><button data-v="neither">Neither</button></div></div>
+    <div class="q" data-q="relation"><h3>3. In which image does the relation hold?</h3>
+      <div class="seg"><button data-v="A">A</button><button data-v="B">B</button><button data-v="both">Both</button><button data-v="neither">Neither</button></div></div>
+    <div class="q" data-q="quality"><h3>4. Which image looks better?</h3>
+      <div class="seg"><button data-v="A">A</button><button data-v="B">B</button><button data-v="cant_tell">Can't tell</button></div></div>
+    <div class="nav">
+      <button class="btn ghost" id="backBtn">Back</button>
+      <span class="status" id="saveStatus" aria-live="polite"></span>
+      <button class="btn" id="nextBtn" disabled>Next</button>
+    </div>
+    <span class="kbd">Enter = next once all four are answered</span>
+  </section>
+
+  <section class="panel" id="done" hidden>
+    <p><b>This set is done. Thank you.</b> Copy the answer code below and send it to the person who shared this link with you. Your answers are not collected until you send it.</p>
+    <textarea id="code" readonly rows="4" aria-label="Your answer code"></textarea>
+    <div class="nav"><button class="btn" id="copyBtn">Copy answer code</button><span class="status" id="copyStatus" aria-live="polite"></span></div>
+    <p>If you have another 10 minutes, you can rate a second set of different pairs; the code then covers both sets.</p>
+    <div class="nav"><button class="btn ghost" id="reviewBtn">Review last pair</button><button class="btn ghost" id="moreBtn">Rate another set</button></div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const KEY = 'rds-public-v1';
+  let M = null, order = [], blocks = [], seed = 0, pos = 0, answers = {}, name = '', shownAt = 0, cur = {};
+  function hash(s){ let h = 2166136261 >>> 0; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return h; }
+  function shuffled(ids, sd){ const a = ids.slice(); let x = sd || 1;
+    for (let i = a.length - 1; i > 0; i--) { x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0; const j = x % (i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function load(){ try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { return null; } }
+  function persist(){ try { localStorage.setItem(KEY, JSON.stringify({name, blocks, seed, answers})); } catch (e) {} }
+  function cellStyle(el, cell){ const s = Math.floor(cell / M.per_sheet), k = cell % M.per_sheet, c = k % M.grid, r = Math.floor(k / M.grid);
+    el.style.backgroundImage = `url(${M.sheets[s]})`; el.style.backgroundPosition = `${c / (M.grid - 1) * 100}% ${r / (M.grid - 1) * 100}%`; }
+  function buildOrder(){ order = []; for (const b of blocks) order = order.concat(shuffled(M.blocks[b], hash(seed + ':' + b))); }
+  function progress(){ const n = order.filter(id => answers[id]).length; $('count').textContent = `${n} of ${order.length} rated`; $('prog').style.width = (order.length ? 100 * n / order.length : 0) + '%'; }
+  function setPressed(q, v){ document.querySelectorAll(`.q[data-q="${q}"] button`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))); }
+  function ready(){ return cur.subject && cur.object && cur.relation && cur.quality; }
+  const ENC = {A: 'a', B: 'b', both: '2', neither: '0', cant_tell: 'x'};
+  function code(){ const a = order.filter(id => answers[id]).map(id => { const r = answers[id];
+      return id.slice(1) + ENC[r.subject] + ENC[r.object] + ENC[r.relation] + ENC[r.quality] + Math.min(999, Math.round(r.ms / 1000)).toString(36); });
+    const clean = name.replace(/[^A-Za-z0-9 .\-_]/g, '').slice(0, 40);
+    return `RDS1|${clean}|${seed.toString(36)}|${blocks.join('.')}|${a.join(',')}`; }
+  function show(i){ pos = Math.max(0, Math.min(i, order.length - 1)); const p = M.byId[order[pos]];
+    $('promptText').textContent = p.prompt; $('subjName').textContent = `the ${p.subject} (subject)`; $('objName').textContent = `the ${p.object} (object)`;
+    cellStyle($('imgA'), p.cells[0]); cellStyle($('imgB'), p.cells[1]);
+    const a = answers[p.id] || {}; cur = {subject: a.subject, object: a.object, relation: a.relation, quality: a.quality};
+    ['subject', 'object', 'relation', 'quality'].forEach(q => setPressed(q, cur[q]));
+    $('nextBtn').disabled = !ready(); $('backBtn').disabled = pos === 0; $('rate').hidden = false; $('done').hidden = true; shownAt = performance.now();
+    $('nextBtn').textContent = pos === order.length - 1 ? 'Finish' : 'Next'; $('saveStatus').textContent = ''; }
+  function finished(){ $('rate').hidden = true; $('done').hidden = false; $('code').value = code(); $('moreBtn').hidden = blocks.length >= M.blocks.length; $('copyStatus').textContent = ''; }
+  function next(){ if (!ready()) return; const p = M.byId[order[pos]];
+    answers[p.id] = {...cur, ms: Math.round(performance.now() - shownAt)}; persist(); progress();
+    const nxt = order.findIndex((id, k) => k > pos && !answers[id]); const miss = order.findIndex(id => !answers[id]);
+    if (nxt >= 0) show(nxt); else if (miss < 0) finished(); else show(miss); }
+  document.querySelectorAll('.q').forEach(q => q.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
+    cur[q.dataset.q] = b.dataset.v; setPressed(q.dataset.q, b.dataset.v); $('nextBtn').disabled = !ready(); }));
+  $('nextBtn').addEventListener('click', next); $('backBtn').addEventListener('click', () => show(pos - 1));
+  $('reviewBtn').addEventListener('click', () => show(order.length - 1));
+  $('moreBtn').addEventListener('click', () => { const nb = M.blocks.length; const last = blocks[blocks.length - 1];
+    for (let i = 1; i <= nb; i++) { const c = (last + i) % nb; if (!blocks.includes(c)) { blocks.push(c); break; } }
+    persist(); buildOrder(); progress(); const f = order.findIndex(id => !answers[id]); if (f >= 0) show(f); else finished(); });
+  $('copyBtn').addEventListener('click', () => { const t = $('code').value;
+    const sel = () => { $('code').focus(); $('code').select(); $('copyStatus').textContent = 'Selected: press Ctrl+C (or Cmd+C) to copy.'; };
+    try { navigator.clipboard.writeText(t).then(() => { $('copyStatus').textContent = 'Copied. Paste it into an email or message.'; }, sel); } catch (e) { sel(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Enter' && !$('rate').hidden && ready() && document.activeElement?.id !== 'rname') { e.preventDefault(); next(); } });
+  async function init(){
+    try { M = await (await fetch('pairs.json')).json(); } catch (e) { $('introStatus').textContent = 'The image list failed to load. Reload the page.'; $('introStatus').className = 'status err'; return; }
+    M.byId = Object.fromEntries(M.pairs.map(p => [p.id, p])); M.sheets.forEach(s => { const i = new Image(); i.src = s; });
+    const st = load();
+    if (st && Array.isArray(st.blocks) && st.blocks.length) { ({name, blocks, seed, answers} = st); $('rname').value = name; }
+    else { seed = (Math.random() * 2 ** 31) >>> 0; blocks = [seed % M.blocks.length]; answers = {}; }
+    buildOrder(); progress();
+    const n = order.filter(id => answers[id]).length;
+    $('introStatus').textContent = n ? `Welcome back: ${n} of ${order.length} pairs already rated on this device.` : 'Enter your name to begin.';
+    const upd = () => { $('startBtn').disabled = !$('rname').value.trim(); }; $('rname').addEventListener('input', upd); upd();
+    $('startBtn').textContent = n ? 'Continue' : 'Start';
+    $('startBtn').addEventListener('click', () => { name = $('rname').value.trim().slice(0, 40); persist(); $('intro').hidden = true;
+      const f = order.findIndex(id => !answers[id]); if (f < 0) finished(); else show(f); });
+  }
+  init();
+})();
+</script>
