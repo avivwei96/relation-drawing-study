@@ -101,7 +101,7 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
 <script>
 (() => {
   const $ = id => document.getElementById(id);
-  const KEY = 'rds-public-v2';
+  const KEY = 'rds-public-v3';
   let M = null, order = [], blocks = [], seed = 0, pos = 0, answers = {}, name = '', shownAt = 0, cur = {};
   function hash(s){ let h = 2166136261 >>> 0; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } return h; }
   function shuffled(ids, sd){ const a = ids.slice(); let x = sd || 1;
@@ -116,9 +116,9 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
   function ready(){ return cur.subject && cur.object && cur.relation && cur.quality; }
   const ENC = {A: 'a', B: 'b', both: '2', neither: '0', cant_tell: 'x'};
   function code(){ const a = order.filter(id => answers[id]).map(id => { const r = answers[id];
-      return id.slice(1) + ENC[r.subject] + ENC[r.object] + ENC[r.relation] + ENC[r.quality] + Math.min(999, Math.round(r.ms / 1000)).toString(36); });
+      return id + ENC[r.subject] + ENC[r.object] + ENC[r.relation] + ENC[r.quality] + Math.min(999, Math.round(r.ms / 1000)).toString(36); });
     const clean = name.replace(/[^A-Za-z0-9 .\-_]/g, '').slice(0, 40);
-    return `RDS1|${clean}|${seed.toString(36)}|${blocks.join('.')}|${a.join(',')}`; }
+    return `RDS2|${clean}|${seed.toString(36)}|${blocks.join('.')}|${a.join(',')}`; }
   function show(i){ pos = Math.max(0, Math.min(i, order.length - 1)); const p = M.byId[order[pos]];
     $('promptText').textContent = p.prompt; $('subjName').textContent = `the ${p.subject}`; $('objName').textContent = `the ${p.object}`;
     cellStyle($('imgA'), p.cells[0]); cellStyle($('imgB'), p.cells[1]);
