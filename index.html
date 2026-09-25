@@ -60,7 +60,6 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
       <li><b>Relation holds</b>: the first object is placed as described relative to the second (left of, right of, above, below). Judge only the placement.</li>
       <li><b>Looks better</b>: overall image quality: sharper, more realistic, fewer distortions. Ignore the description.</li>
       <li><b>Contains the ...</b>: the thing named in the question is recognisable in the image. The model is still in training, so objects can look rough: a duck may be just a yellow blob. Judge roughly.</li>
-      <li>You may skip a question you cannot judge and still press Next.</li>
     </ul>
     <p>You will see about 17 pairs, which takes around 8 minutes. No sign-in is needed. Your answers are sent automatically when you finish. Progress is kept in this browser, so you can pause and come back on the same device.</p>
     <label class="f" for="rname">Your name or initials
@@ -88,7 +87,7 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
       <span class="status" id="saveStatus" aria-live="polite"></span>
       <button class="btn" id="nextBtn" disabled>Next</button>
     </div>
-    <span class="kbd">Enter = next. You may skip a question you cannot judge.</span>
+    <span class="kbd">Enter = next once all four are answered</span>
   </section>
 
   <section class="panel" id="done" hidden>
@@ -118,7 +117,7 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
   function buildOrder(){ order = []; for (const b of blocks) order = order.concat(shuffled(M.blocks[b], hash(seed + ':' + b))); }
   function progress(){ const n = order.filter(id => answers[id]).length; $('count').textContent = `${n} of ${order.length} rated`; $('prog').style.width = (order.length ? 100 * n / order.length : 0) + '%'; }
   function setPressed(q, v){ document.querySelectorAll(`.q[data-q="${q}"] button`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))); }
-  function ready(){ return true; }   // partial answers allowed (a skipped question is stored as missing)
+  function ready(){ return cur.subject && cur.object && cur.relation && cur.quality; }
   const ENC = new Proxy({A: 'a', B: 'b', both: '2', neither: '0', cant_tell: 'x'}, {get: (t, k) => t[k] || '-'});
   function code(){ const a = order.filter(id => answers[id]).map(id => { const r = answers[id];
       return id + ENC[r.subject] + ENC[r.object] + ENC[r.relation] + ENC[r.quality] + Math.min(999, Math.round(r.ms / 1000)).toString(36); });
