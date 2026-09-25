@@ -56,9 +56,11 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
   <section class="panel" id="intro">
     <p>Each screen shows a short description and two generated images, <b>A</b> and <b>B</b>, made from the same starting noise by two different models. Which model made which image is hidden and changes from pair to pair.</p>
     <ul>
-      <li><b>Contains the ...</b>: the thing named in the question is clearly visible in the image.</li>
+
       <li><b>Relation holds</b>: the first object is placed as described relative to the second (left of, right of, above, below). Judge only the placement.</li>
-      <li><b>Looks better</b>: overall image quality and realism, ignoring the description.</li>
+      <li><b>Looks better</b>: overall image quality: sharper, more realistic, fewer distortions. Ignore the description.</li>
+      <li><b>Contains the ...</b>: the thing named in the question is recognisable in the image. The model is still in training, so objects can look rough: a duck may be just a yellow blob. Judge roughly.</li>
+      <li>You may skip a question you cannot judge and still press Next.</li>
     </ul>
     <p>You will see about 17 pairs, which takes around 8 minutes. No sign-in is needed. Your answers are sent automatically when you finish. Progress is kept in this browser, so you can pause and come back on the same device.</p>
     <label class="f" for="rname">Your name or initials
@@ -73,20 +75,20 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
       <div class="card"><b>A</b><div class="img" id="imgA" role="img" aria-label="Image A"></div></div>
       <div class="card"><b>B</b><div class="img" id="imgB" role="img" aria-label="Image B"></div></div>
     </div>
-    <div class="q" data-q="subject"><h3>1. Which image contains <span id="subjName">the subject</span>?</h3>
+    <div class="q" data-q="relation"><h3>1. In which image does the relation hold? <span>(is the first object placed as described?)</span></h3>
       <div class="seg"><button data-v="A">A</button><button data-v="B">B</button><button data-v="both">Both</button><button data-v="neither">Neither</button></div></div>
-    <div class="q" data-q="object"><h3>2. Which image contains <span id="objName">the object</span>?</h3>
-      <div class="seg"><button data-v="A">A</button><button data-v="B">B</button><button data-v="both">Both</button><button data-v="neither">Neither</button></div></div>
-    <div class="q" data-q="relation"><h3>3. In which image does the relation hold?</h3>
-      <div class="seg"><button data-v="A">A</button><button data-v="B">B</button><button data-v="both">Both</button><button data-v="neither">Neither</button></div></div>
-    <div class="q" data-q="quality"><h3>4. Which image looks better?</h3>
+    <div class="q" data-q="quality"><h3>2. Which image looks better? <span>(sharper, more realistic, fewer distortions; ignore the description)</span></h3>
       <div class="seg"><button data-v="A">A</button><button data-v="B">B</button><button data-v="cant_tell">Can't tell</button></div></div>
+    <div class="q" data-q="subject"><h3>3. Which image contains <span id="subjName">the subject</span>?</h3>
+      <div class="seg"><button data-v="A">A</button><button data-v="B">B</button><button data-v="both">Both</button><button data-v="neither">Neither</button></div></div>
+    <div class="q" data-q="object"><h3>4. Which image contains <span id="objName">the object</span>?</h3>
+      <div class="seg"><button data-v="A">A</button><button data-v="B">B</button><button data-v="both">Both</button><button data-v="neither">Neither</button></div></div>
     <div class="nav">
       <button class="btn ghost" id="backBtn">Back</button>
       <span class="status" id="saveStatus" aria-live="polite"></span>
       <button class="btn" id="nextBtn" disabled>Next</button>
     </div>
-    <span class="kbd">Enter = next once all four are answered</span>
+    <span class="kbd">Enter = next. You may skip a question you cannot judge.</span>
   </section>
 
   <section class="panel" id="done" hidden>
@@ -116,8 +118,8 @@ input[type=text]:focus-visible,button:focus-visible{outline:2px solid var(--acce
   function buildOrder(){ order = []; for (const b of blocks) order = order.concat(shuffled(M.blocks[b], hash(seed + ':' + b))); }
   function progress(){ const n = order.filter(id => answers[id]).length; $('count').textContent = `${n} of ${order.length} rated`; $('prog').style.width = (order.length ? 100 * n / order.length : 0) + '%'; }
   function setPressed(q, v){ document.querySelectorAll(`.q[data-q="${q}"] button`).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))); }
-  function ready(){ return cur.subject && cur.object && cur.relation && cur.quality; }
-  const ENC = {A: 'a', B: 'b', both: '2', neither: '0', cant_tell: 'x'};
+  function ready(){ return true; }   // partial answers allowed (a skipped question is stored as missing)
+  const ENC = new Proxy({A: 'a', B: 'b', both: '2', neither: '0', cant_tell: 'x'}, {get: (t, k) => t[k] || '-'});
   function code(){ const a = order.filter(id => answers[id]).map(id => { const r = answers[id];
       return id + ENC[r.subject] + ENC[r.object] + ENC[r.relation] + ENC[r.quality] + Math.min(999, Math.round(r.ms / 1000)).toString(36); });
     const clean = name.replace(/[^A-Za-z0-9 .\-_]/g, '').slice(0, 40);
